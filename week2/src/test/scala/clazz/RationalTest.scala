@@ -7,12 +7,12 @@ class RationalSuite extends munit.FunSuite {
   test("add") {
     val x = new Rational(1, 2)
     val y = new Rational(2, 3)
-    assertEquals(x.add(y).toString, "7 / 6")
+    assertEquals((x+y).toString, "7 / 6")
   }
 
   test("neg") {
     val x = new Rational(1, 2)
-    assertEquals(x.neg.toString, "-1 / 2")
+    assertEquals(x.neg.toString, "1 / -2")
   }
 
   test("sub") {
@@ -30,6 +30,18 @@ class RationalSuite extends munit.FunSuite {
   test("div") {
     val x = new Rational(4, 3)
     val y = new Rational(2, 3)
-    assertEquals(x.div(y).toString, "12 / 6")
+    assertEquals(x.div(y).toString, "2 / 1")
+  }
+
+  test("less") {
+    val x = new Rational(1, 2)
+    val y = new Rational(2, 2)
+    assert(x.less(y))
+  }
+
+  test("construct") {
+    val x = new Rational(3)
+    val y = new Rational(3, 1)
+    assertEquals(x.toString, y.toString)
   }
 }
