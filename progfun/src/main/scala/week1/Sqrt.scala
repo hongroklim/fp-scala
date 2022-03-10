@@ -1,3 +1,5 @@
+package week1
+
 object Sqrt extends App {
   def abs(x: Double) = if(x < 0) -x else x
   

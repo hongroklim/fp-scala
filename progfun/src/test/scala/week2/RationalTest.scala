@@ -1,6 +1,6 @@
-package clazz
+package week2
 
-import clazz.Rational
+import week2.Rational
 
 class RationalSuite extends munit.FunSuite {
 

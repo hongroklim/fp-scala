@@ -1,4 +1,4 @@
-package clazz
+package week2
 
 class Rational(x: Int, y: Int) {
   require(y != 0, "denominator must be nonzero")

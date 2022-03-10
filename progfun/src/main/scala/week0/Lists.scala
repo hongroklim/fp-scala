@@ -1,4 +1,4 @@
-package example
+package week0
 
 object Lists {
 

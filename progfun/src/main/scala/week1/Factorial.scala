@@ -1,3 +1,5 @@
+package week1
+
 object Factorial extends App {
   def factorial(n: Int): Int = {
     def loop(acc: Int, n: Int): Int =

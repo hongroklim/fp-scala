@@ -1,4 +1,4 @@
-package example
+package week0
 
 /**
  * This class implements a munit test suite for the methods in object
