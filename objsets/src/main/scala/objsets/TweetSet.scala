@@ -141,22 +141,7 @@ class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
   }
 
   def union(that: TweetSet): TweetSet =
-    ((left union right) union that) incl elem
-
-  /* 
-  def mostRetweeted: Tweet = {
-    // TODO Is there fancy way to distinguish empty or not?
-    val empty = new Tweet("", "", -1)
-    val leftMost = scala.util.Try(left.mostRetweeted).toOption.getOrElse(empty)
-    val rightMost = scala.util.Try(right.mostRetweeted).toOption.getOrElse(empty)
-
-    if (elem.retweets >= leftMost.retweets &&
-          elem.retweets >= rightMost.retweets) elem
-    else if (leftMost.retweets >= elem.retweets &&
-              leftMost.retweets >= rightMost.retweets) leftMost
-    else rightMost
-  }
-  */
+    (left union (right union that)) incl elem
 
   def mostRetweeted: Tweet = remove(elem).mostRetweetedHelper(elem)
  
@@ -230,21 +215,21 @@ object GoogleVsApple {
   val google = List("android", "Android", "galaxy", "Galaxy", "nexus", "Nexus")
   val apple = List("ios", "iOS", "iphone", "iPhone", "ipad", "iPad")
 
-  lazy val tweets = TweetReader.allTweets
+  lazy val tweets: TweetSet = TweetReader.allTweets
 
   def inclAny(text: String, keywords: List[String]): Boolean =
     if (keywords.isEmpty) false
     else if (text contains keywords.head) true
     else inclAny(text, keywords.tail)
 
-  lazy val googleTweets: TweetSet = tweets.filter(tw => inclAny(tw.text, google))
-  lazy val appleTweets: TweetSet = tweets.filter(tw => inclAny(tw.text, google))
+  lazy val googleTweets: TweetSet = tweets filter(tw => inclAny(tw.text, google))
+  lazy val appleTweets: TweetSet = tweets filter(tw => inclAny(tw.text, apple))
 
   /**
    * A list of all tweets mentioning a keyword from either apple or google,
    * sorted by the number of retweets.
    */
-  lazy val trending: TweetList = (googleTweets.union(appleTweets)).descendingByRetweet 
+  lazy val trending: TweetList = (googleTweets union appleTweets).descendingByRetweet 
 }
 
 object Main extends App {
