@@ -28,10 +28,13 @@ libraryDependencies += "org.scalameta" %% "munit" % "0.7.22" % Test
 testFrameworks += new TestFramework("munit.Framework")
 ```
 
-in `project/build.properties`
+then remove `project/Dependencies.scala`
 
-```properties
-sbt.version=1.6.2
+### Test Specific Package
+
+```sh
+> /* in sbt console */
+> testOnly <package-name>.*
 ```
 
 ### Submit Assignment
