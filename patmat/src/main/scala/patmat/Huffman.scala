@@ -118,7 +118,11 @@ trait Huffman extends HuffmanInterface {
   /**
    * Checks whether the list `trees` contains only one single code tree.
    */
-  def singleton(trees: List[CodeTree]): Boolean = trees.isEmpty || trees.tail.isEmpty
+  def singleton(trees: List[CodeTree]): Boolean = trees match {
+    case Nil => false
+    case x :: Nil => true
+    case x :: xs => false
+  }
 
   /**
    * The parameter `trees` of this function is a list of code trees ordered
