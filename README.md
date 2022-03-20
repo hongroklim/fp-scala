@@ -12,6 +12,8 @@ All projects are derived from the lectures below;
 
 ## Snippets
 
+### [Cheat Sheet](./CheatSheet.md)
+
 ### Init Scala Project
 
 ```sh
