@@ -4,11 +4,23 @@ Learning Materials of Functional Programming in Coursera
 
 ## Lectures
 
-All projects are derived from the lectures below;
+All source codes are from 
+[Functional Programming in Scala Specialization](https://www.coursera.org/specializations/scala).
 
-* [Functional Programming in Scala Specialization](https://www.coursera.org/specializations/scala)
   * [Functional Programming Principles in Scala (Scala 2 version)](https://www.coursera.org/learn/scala2-functional-programming)
+    * [Recursion](./recfun)
+    * [Functional Sets](./funsets)
+    * [Object-Oriented Sets](./objsets)
+    * [Huffman Coding](./patmat)
+    * [Anagrams](./forcomp)
   * [Functional Program Design in Scala (Scala 2 version)](https://www.coursera.org/learn/scala2-functional-program-design)
+    * [Quickcheck](./quickcheck)
+    * [Bloxorz](./streams)
+    * [JSON Codecs](./codecs)
+    * [Calculator](./calculator)
+  * [Parallel programming (Scala 2 version)](https://www.coursera.org/learn/scala2-parallel-programming)
+    * [Parallel Box Blur Filter](./scalashop)
+    * [Reductions and Prefix Sums](./reductions)
 
 ## Snippets
 
