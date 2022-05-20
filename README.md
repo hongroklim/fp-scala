@@ -21,6 +21,8 @@ All source codes are from
   * [Parallel programming (Scala 2 version)](https://www.coursera.org/learn/scala2-parallel-programming)
     * [Parallel Box Blur Filter](./scalashop)
     * [Reductions and Prefix Sums](./reductions)
+    * [K-Means](./kmeans)
+    * [Barnes-Hut Simulation](./barneshut)
 
 ## Snippets
 
