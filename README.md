@@ -4,7 +4,7 @@ Learning Materials of Functional Programming in Coursera
 
 ## Lectures
 
-All source codes are from 
+All source codes are from
 [Functional Programming in Scala Specialization](https://www.coursera.org/specializations/scala).
 
   * [Functional Programming Principles in Scala (Scala 2 version)](https://www.coursera.org/learn/scala2-functional-programming)
@@ -23,6 +23,8 @@ All source codes are from
     * [Reductions and Prefix Sums](./reductions)
     * [K-Means](./kmeans)
     * [Barnes-Hut Simulation](./barneshut)
+  * [Big Data Analysis with Scala and Spark](https://www.coursera.org/learn/scala-spark-big-data)
+    * [Wikipedia](./wikipedia)
 
 ## Snippets
 
