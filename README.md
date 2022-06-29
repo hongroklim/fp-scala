@@ -26,6 +26,7 @@ All source codes are from
   * [Big Data Analysis with Scala and Spark](https://www.coursera.org/learn/scala-spark-big-data)
     * [Wikipedia](./wikipedia)
     * [StackOverflow](./stackoverflow)
+    * [TimeUsage](./timeusage)
 
 ## Snippets
 
