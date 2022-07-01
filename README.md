@@ -27,6 +27,8 @@ All source codes are from
     * [Wikipedia](./wikipedia)
     * [StackOverflow](./stackoverflow)
     * [TimeUsage](./timeusage)
+  * [Functional Programming in Scala Capstone](https://www.coursera.org/learn/scala-capstone)
+    * [Observatory](./observatory)
 
 ## Snippets
 
