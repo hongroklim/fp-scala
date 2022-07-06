@@ -10,7 +10,11 @@
   
   <logger name="org.apache.spark" level="error" />
 
-  <root level="info">
+  <logger name="org.apache.hadoop" level="error" />
+  <logger name="io.netty" level="error" />
+  <logger name="org.sparkproject.jetty" level="error" />
+
+  <root level="error">
     <appender-ref ref="STDOUT" />
   </root>
 </configuration>
