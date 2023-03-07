@@ -25,7 +25,9 @@ object Visualization2 extends Visualization2Interface:
     d10: Temperature,
     d11: Temperature
   ): Temperature =
-    ???
+    d00*(1-point.x)*(1-point.y) + d10*point.x*(1-point.y) +
+    d01*(1-point.x)*point.y + d11*point.x*point.y
+
 
   /**
     * @param grid Grid to visualize
@@ -38,5 +40,24 @@ object Visualization2 extends Visualization2Interface:
     colors: Iterable[(Temperature, Color)],
     tile: Tile
   ): ImmutableImage =
-    ???
+    val locations =
+      for {
+        i <- 0 until 256
+        j <- 0 until 256
+      } yield Interaction.tileLocation(Tile(tile.x+i, tile.y+j, tile.zoom))
 
+    val pixels = locations
+      .map(location => {
+        val x1 = location.lon - location.lon.floor.toInt
+        val y1 = location.lat.ceil.toInt - location.lat
+        val d00 = grid(GridLocation(location.lat.ceil.toInt, location.lon.floor.toInt))
+        val d01 = grid(GridLocation(location.lat.floor.toInt, location.lon.floor.toInt))
+        val d10 = grid(GridLocation(location.lat.ceil.toInt, location.lon.ceil.toInt))
+        val d11 = grid(GridLocation(location.lat.floor.toInt, location.lon.ceil.toInt))
+        bilinearInterpolation(CellPoint(x1, y1), d00, d01, d10, d11)
+      })
+      .map(temperature => Visualization.interpolateColor(colors, temperature))
+      .map(color => Pixel(color.red, color.green, color.blue))
+      .toArray
+
+    ImmutableImage.create(256, 256, pixels)

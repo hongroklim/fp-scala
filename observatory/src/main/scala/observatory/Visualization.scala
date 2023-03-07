@@ -2,74 +2,69 @@ package observatory
 
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.pixels.Pixel
-import com.sksamuel.scrimage.metadata.ImageMetadata
-import com.sksamuel.scrimage.implicits.given
-
-import scala.collection.parallel.CollectionConverters.given
-import scala.math.{pow, acos, sin, cos, abs, Pi, sqrt}
-
-import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.types.*
+import scala.math.{abs, sin, cos, sqrt, pow, toRadians, asin}
 
 /**
   * 2nd milestone: basic visualization
   */
-object Visualization extends VisualizationInterface:
+object Visualization extends VisualizationInterface {
 
-  import org.apache.spark.sql.SparkSession
+  val p_param = 6
+  val earthRadius = 6371
 
-  val spark: SparkSession =
-    SparkSession
-      .builder()
-      .appName("Visualization")
-      .master("local[*]")
-      .getOrCreate()
-
-  import spark.implicits._
-  import scala3encoders.given
-
-
-  case class TempColor(temp: Temperature, color: Color)
-  case class Neighbors(min: TempColor, max: TempColor)
+  val imageWidth = 360
+  val imageHeight = 180
 
   /**
     * @param temperatures Known temperatures: pairs containing a location and the temperature at this location
     * @param location Location where to predict the temperature
     * @return The predicted temperature at `location`
     */
-  def predictTemperature(temperatures: Iterable[(Location, Temperature)],
-      location: Location): Temperature = {
+  def predictTemperature(temperatures: Iterable[(Location, Temperature)], location: Location): Temperature = {
+    val dists = temperatures.map(entry => (computeDist(location, entry._1), entry._2))
+    val min = dists.reduce((a, b) => if(a._1 < b._1) a else b)
 
-    def calcDist(loc: Location): Double =
-      val r = 6371 // Radius of the Earth
+    if(min._1 < 1) {
+      // a close enough station (< 1km), take its temperature
+      min._2
+    }else{
+      // interpolate
+      val weights = dists.map(entry => (1 / pow(entry._1, p_param), entry._2))
+      val normalizer = weights.map(_._1).sum
 
-      val isAntipodes: Boolean =
-        if (location.lat != -loc.lat) false
-        else if (location.lon > 0) (location.lon - loc.lon) == 180
-        else (location.lon - loc.lon) == -180
+      weights.map(entry => entry._1 * entry._2).sum  / normalizer
+    }
+  }
 
-      if (location == loc) 0
-      else if (isAntipodes) Pi
-      else acos(sin(location.lat)*sin(loc.lat)
-            + cos(location.lat)*cos(loc.lat)*cos(abs(location.lon + loc.lon)))
+  /**
+    * @param a First location
+    * @param b Second location
+    * @return Are the locations antipodes?
+    */
 
-    def weight(loc: Location): Double =
-      val p = 2
-      val dist = calcDist(loc)
+  /**
+    * @param a First location
+    * @param b Second location
+    * @return Great-circle distance between a and b
+    */
+  def computeDist(a: Location, b: Location): Double = {
+    def areAntipodes(a: Location, b: Location): Boolean = {
+      (a.lat == -b.lat) && (abs(a.lon - b.lon) == 180)
+    }
 
-      if(dist < 1) 1
-      else 1 / pow(dist, p)
+    if(a == b){
+      0
+    }else if(areAntipodes(a, b)){
+      earthRadius * math.Pi
+    } else {
+      val delta_lon = toRadians(abs(a.lon - b.lon))
+      val alat = toRadians(a.lat)
+      val blat = toRadians(b.lat)
+      val delta_lat = abs(alat - blat)
+      val delta_sigma =   2 * asin(sqrt( pow(sin(delta_lat/2), 2) + cos(alat) * cos(blat) * pow(sin(delta_lon/2), 2) ))
 
-    def seqOp(e: (Location, Temperature)): (Double, Double) =
-      val w = weight(e._1)
-      (w * e._2, w)
-
-    def combOp(a: (Double, Double), b: (Double, Double)): (Double, Double) =
-      (a._1 + b._1, a._2 + b._2)
-
-    val acc: (Double, Double) = temperatures.map(seqOp).reduce(combOp)
-
-    acc._1 / acc._2
+      earthRadius * delta_sigma
+    }
   }
 
   /**
@@ -77,51 +72,63 @@ object Visualization extends VisualizationInterface:
     * @param value The value to interpolate
     * @return The color that corresponds to `value`, according to the color scale defined by `points`
     */
-  def interpolateColor(points: Iterable[(Temperature, Color)], value: Temperature): Color =
-    val zeroValue = Neighbors(TempColor(Double.MinValue, Color(0, 0, 0)),
-                              TempColor(Double.MaxValue, Color(0, 0, 0)))
+  def interpolateColor(points: Iterable[(Temperature, Color)], value: Temperature): Color = {
+    val sameCol = points.find(_._1 == value)
+    sameCol match {
+      case Some((_, col)) => col
+      case _ =>
+        val (smaller, bigger) = points.partition(_._1 < value)
+        if (smaller.isEmpty) {
+          bigger.minBy(_._1)._2
+        }else {
+          val a = smaller.maxBy(_._1)
 
-    def seqOp(acc: Neighbors, e: TempColor): Neighbors =
-      if (acc.min.temp < e.temp && e.temp <= value) Neighbors(e, acc.max)
-      else if (value <= e.temp && e.temp < acc.max.temp) Neighbors(acc.min, e)
-      else acc
+          if (bigger.isEmpty) {
+            a._2
+          }else {
+            val b = bigger.minBy(_._1)
+            val wa = 1 / abs(a._1 - value)
+            val wb = 1 / abs(b._1 - value)
 
-    val neighbors = points.map((temp, color) => TempColor(temp, color))
-                          .foldLeft(zeroValue)(seqOp)
+            def interp(x: Int, y: Int): Int = ((wa * x + wb * y) / (wa + wb)).round.toInt
 
-    def interpolate(ns: Neighbors): Color =
-      // For each RGB
-      def calc(intOf: Color => Int): Int =
-        val num = intOf(ns.min.color) * (ns.max.temp - value)
-                  + intOf(ns.max.color) * (value - ns.min.temp)
-        val den = ns.max.temp - ns.min.temp
-        (num / den).toInt
+            val ca = a._2
+            val cb = b._2
 
-      Color(calc(c => c._1), calc(c => c._2), calc(c => c._3))
-
-    // Out of bound value
-    if (neighbors.min.temp == Double.MinValue) neighbors.max.color
-    else if (neighbors.max.temp == Double.MaxValue) neighbors.min.color
-    else interpolate(neighbors)
-
+            Color(interp(ca.red, cb.red), interp(ca.green, cb.green), interp(ca.blue, cb.blue))
+          }
+        }
+    }
+  }
 
   /**
     * @param temperatures Known temperatures
     * @param colors Color scale
     * @return A 360×180 image where each pixel shows the predicted temperature at its location
     */
-  def visualize(temperatures: Iterable[(Location, Temperature)],
-                colors: Iterable[(Temperature, Color)]): ImmutableImage =
-    val width = 360
-    val height = 180
+  def visualize(temperatures: Iterable[(Location, Temperature)], colors: Iterable[(Temperature, Color)]): ImmutableImage = {
+    val coords = for {
+      i <- 0 until imageHeight
+      j <- 0 until imageWidth
+    } yield (i, j)
 
-    def calcPixel(xy: (Int, Int)): Pixel =
-      val temp = predictTemperature(temperatures,
-                      Location(-xy._1 + (height/2), xy._2 - (width/2)))
-      val color = interpolateColor(colors, temp)
-      Pixel(xy._1, xy._2, color.red, color.green, color.blue, 255)
+    val pixels = coords
+      .map(transformCoord)
+      .map(predictTemperature(temperatures, _))
+      .map(interpolateColor(colors, _))
+      .map(color => Pixel(color.red, color.green, color.blue))
+      .toArray
 
-    val cords = for {y <- 0 until width; x <- 0 until height} yield (x, y)
-    val pixels = cords.par.map(calcPixel)
+    ImmutableImage.create(imageWidth, imageHeight, pixels)
+  }
 
-    ImmutableImage.wrapPixels(width, height, pixels.toArray, ImageMetadata.empty)
+  /**
+    * @param coord Pixel coordinates
+    * @return Latitude and longitude
+    */
+  def transformCoord(coord: (Int, Int)): Location = {
+    val lon = (coord._2 - imageWidth/2) * (360 / imageWidth)
+    val lat = -(coord._1 - imageHeight/2) * (180 / imageHeight)
+    Location(lat, lon)
+  }
+}
